@@ -27,7 +27,7 @@ export const signup = async(req,res) =>{
             generateToken(newUser._id, res);
             await newUser.save();
 
-            res.status(200).json({
+            return res.status(200).json({
                 _id:newUser._id,
                 fullName: newUser.fullName,
                 email: newUser.email,
@@ -42,13 +42,42 @@ export const signup = async(req,res) =>{
         console.log("Error in signup controller", error.message);
         res.status(500).json({message: "Internal Server error"});
     }
-    res.send("Signup Route");
 }
 
-export const login = (req,res) =>{
-    res.send("Login Route");
-}
+export const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(400).json({ message: "Invalid Credentials" });
+        }
+
+        const isCorrectPassword = await bcrypt.compare(password, user.password);
+        if (!isCorrectPassword) {
+            return res.status(400).json({ message: "Invalid Credentials" });
+        }
+
+        generateToken(user._id, res);
+
+        return res.status(200).json({
+            fullName: user.fullName,
+            email: user.email,
+            profilePic: user.profilePic
+        });
+    } catch (error) {
+        console.log("Error in login route", error.message);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
 
 export const logout = (req,res) =>{
-    res.send("Logout Route");
+    try{
+        res.cookie("jwt", "", {maxAge: 0});
+        return res.status(200).json({message: "Logged out successfully"});
+    }
+    catch(error){
+        console.log("Error in logout route", error.message);
+        return res.status(400).json({message: "Internal Server Error"});
+    }
 }
