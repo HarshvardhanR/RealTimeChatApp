@@ -81,3 +81,7 @@ export const logout = (req,res) =>{
         return res.status(400).json({message: "Internal Server Error"});
     }
 }
+
+export const updateProfile = async(req, res) =>{
+    
+}
